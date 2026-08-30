@@ -1,0 +1,40 @@
+# Python dependencies for OSC700
+# Generated from third-party imports across codes/ and LiteratureReview/
+# Standard-library and local-module imports are intentionally excluded.
+
+# --- Numerics / data ---
+numpy
+pandas
+scipy
+
+# --- Plotting ---
+matplotlib
+
+# --- Materials / chemistry ---
+pymatgen
+ase
+
+# --- Web scraping / HTTP ---
+selenium
+requests
+curl_cffi
+wget
+trafilatura
+beautifulsoup4
+
+# --- PDF / text / HTML parsing ---
+pypdf
+chardet
+nltk
+
+# --- ML / LLM ---
+openai
+sentence-transformers
+tqdm
+
+# --- Fuzzy string matching ---
+python-Levenshtein
+
+# --- Optional: CSD Python API (proprietary, imported under try/except) ---
+# Install separately from the Cambridge Crystallographic Data Centre; not on PyPI.
+# ccdc
