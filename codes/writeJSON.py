@@ -6,8 +6,11 @@ import re
 import argparse
 import numpy as np
 
+from collections import deque
 from numpy.char import isdigit
+from scipy.sparse import csgraph
 from pymatgen.core import Structure, Molecule
+from pymatgen.analysis.local_env import JmolNN
 
 
 
@@ -28,6 +31,50 @@ def s2formula(s : str) -> dict:
     for tmp in s.split():
         formula[re.match(r"[A-Z][a-z]*", tmp).group()] = int(re.search(r"\d+$", tmp).group())
     return formula
+
+
+def extract_molecules(structure: Structure) -> list[Molecule]:
+    """
+    Return one PBC-unwrapped pymatgen ``Molecule`` per connected molecular fragment.
+
+    Uses the JmolNN bond definition; component membership comes from
+    ``scipy.csgraph``, and a BFS over the raw ``nn_info`` (which retains
+    per-edge periodic image info) undoes periodic wrapping so every fragment
+    becomes a stand-alone molecule with finite-cluster Cartesians.
+    """
+    nn_info = JmolNN().get_all_nn_info(structure)
+    n = len(nn_info)
+
+    adj = np.zeros((n, n), dtype=int)
+    for i, neighbours in enumerate(nn_info):
+        for nb in neighbours:
+            adj[i, nb["site_index"]] = 1
+    _, labels = csgraph.connected_components(adj, directed=False)
+
+    lattice = structure.lattice.matrix
+    cart_coords = structure.cart_coords
+    species = [str(s) for s in structure.species]
+
+    molecules: list[Molecule] = []
+    for comp_id in range(int(labels.max()) + 1):
+        comp = np.where(labels == comp_id)[0]
+        anchor = int(comp[0])
+        offsets = {anchor: np.zeros(3, dtype=float)}
+        queue, visited = deque([anchor]), {anchor}
+        while queue:
+            u = queue.popleft()
+            for nb in nn_info[u]:
+                v = nb["site_index"]
+                if v in visited or labels[v] != comp_id:
+                    continue
+                # nn_info[u] gives v's periodic image relative to u, so adding
+                # is unconditionally correct (sign falls out naturally).
+                offsets[v] = offsets[u] + np.array(nb["image"], dtype=float)
+                visited.add(v)
+                queue.append(v)
+        positions = np.stack([cart_coords[i] + offsets[i] @ lattice for i in comp])
+        molecules.append(Molecule([species[i] for i in comp], positions))
+    return molecules
 
 
 def check_rmsd(rmsd: float, low_threshold : float = 0.01, high_threshold : float = 0.4) -> None:
@@ -143,25 +190,19 @@ def write_relax(
         if rmsd is not None:
             json_file["geometry"]["rmsd"] = rmsd
     
-    try:
-        import functions
-        import ref
-    except ImportError:
-        print("Functions under dbaAutomator package not installed, cannot write relaxation geometry.")
-        print()
+    if "molecule" not in json_file["geometry"] or overwrite:
+        molecules = extract_molecules(unitcell)
+        formulas = {mol.formula for mol in molecules}
+        if len(formulas) > 1:
+            print(f"Warning: fragments with differing formulas found: {formulas}. Storing the largest fragment.")
+        molecule = max(molecules, key=len)
+        json_file["geometry"]["molecule"] = molecule.as_dict()
     else:
-        if "molecule" not in json_file["geometry"] or overwrite:
-            supercell = functions.getSuperCell(unitcell, (8, 8, 8))
-            bondDict = functions.getBondDict(unitcell, ref.bondCutoff)
-            singleMol = functions.getCentralSingleMol(supercell, bondDict)
-            molecule = Molecule([], [])
-            for value in singleMol.values():
-                molecule.append(str(value.specie), value.coords)
-            json_file["geometry"]["molecule"] = molecule.as_dict()
-        print()
+        molecule = Molecule.from_dict(json_file["geometry"]["molecule"])
+    print()
 
-        if "chemical_formula" not in json_file["geometry"] or overwrite:
-            json_file["geometry"]["chemical_formula"] = s2formula(molecule.formula)
+    if "chemical_formula" not in json_file["geometry"] or overwrite:
+        json_file["geometry"]["chemical_formula"] = s2formula(molecule.formula)
 
     return json_file
     
@@ -331,7 +372,7 @@ def write_gwbse(
     path = os.path.join(root_folder, "2-bgw/2-sigma/sigma_hp.log")
     if os.path.exists(path):
         if "dos" not in json_file["gwbse"] or overwrite:
-            json_file["gwbse"]["dos"] = {"k_points": [], "energies": []}
+            json_file["gwbse"]["dos"] = {"kpoints": [], "val": []}
             with open(path, 'r') as f:
                 start = False
                 columns = None
@@ -340,7 +381,7 @@ def write_gwbse(
                     result_re = re.match(r"\s*k\s*=\s*([+-]*\d+\.\d+)\s*([+-]*\d+\.\d+)\s*([+-]*\d+\.\d+)\s*ik\s*=\s*\d+\s*spin\s*=\s*\d+", line)
                     result_split = line.strip().split()
                     if result_re:
-                        json_file["gwbse"]["dos"]["k_points"].append(list(map(float, result_re.groups())))
+                        json_file["gwbse"]["dos"]["kpoints"].append(list(map(float, result_re.groups())))
                     elif len(result_split) > 0 and result_split[0] == 'n':
                         if columns:
                             assert columns == result_split, "Columns in sigma_hp.log changed"
@@ -348,15 +389,15 @@ def write_gwbse(
                             columns = result_split
                             indexes = list(i for i, col in enumerate(columns) if col in ('n', "Eo", "Eqp1"))
                         start = True
-                        json_file["gwbse"]["dos"]["energies"].append([])
+                        json_file["gwbse"]["dos"]["val"].append([])
                     elif re.match(r"=+", line):
                         print("End of sigma_hp.log")
                         break
                     elif start and len(result_split) > 0:
                         assert all([is_number(i) for i in result_split]), f"Non-numeric value in line {line} of sigma_hp.log!"
-                        json_file["gwbse"]["dos"]["energies"][-1].append(list(map(float, [result_split[index] for index in indexes])))
+                        json_file["gwbse"]["dos"]["val"][-1].append(list(map(float, [result_split[index] for index in indexes])))
             if n_sigma_k_points > 0:
-                assert n_sigma_k_points == len(json_file["gwbse"]["dos"]["k_points"]) == len(json_file["gwbse"]["dos"]["energies"]), "Number of k points in sigma_hp.log does not match sigma.inp"
+                assert n_sigma_k_points == len(json_file["gwbse"]["dos"]["kpoints"]) == len(json_file["gwbse"]["dos"]["val"]), "Number of k points in sigma_hp.log does not match sigma.inp"
 
     if "bandstructure" not in json_file["gwbse"]:
         json_file["gwbse"]["bandstructure"] = {}
@@ -489,12 +530,11 @@ def main():
     id = os.path.basename(args.json_file).split('.')[0]
     print(f"Please make sure the CSD ID {id} is correct.")
 
-    if os.path.exists(args.json_file):
+    try:
         with open(args.json_file, 'r') as f:
             json_file = json.load(f)
-    else:
-        json_file = {}
-    if json_file == None:
+    except Exception as e:
+        print(f"Error reading JSON file {args.json_file}: {e}. Starting with an empty JSON file.")
         json_file = {}
 
     if "geometry" in json_file and "rmsd" in json_file["geometry"]:

@@ -24,14 +24,14 @@ class Absorption():
         optical_gap: with unit eV
 
         Example:
-        >>> absorp = Absorption.from_json(r"path/to/HBZCOR.json")
-        >>> absorp = Absorption.extinction_coefficient_dat(r"path/to/absorption_eh_a.dat")
+        >>> absorp = Absorption.from_json(r"C:\Users\18000\OneDrive\Desktop\HAppend\data\HBZCOR.json")
+        >>> absorp = Absorption.extinction_coefficient_dat(r"C:\NMarom\PAH101\struct_absorption_compare\HBZCOR\absorption_eh_a.dat")
         >>> absorp = Absorption.from_dat(
-        >>>    r"path/to/absorption_eh_a.dat",
-        >>>    r"path/to/absorption_eh_b.dat",
-        >>>    r"path/to/absorption_eh_c.dat"
+        >>>    r"C:\NMarom\PAH101\struct_absorption_compare\HBZCOR\absorption_eh_a.dat",
+        >>>    r"C:\NMarom\PAH101\struct_absorption_compare\HBZCOR\absorption_eh_b.dat",
+        >>>    r"C:\NMarom\PAH101\struct_absorption_compare\HBZCOR\absorption_eh_c.dat"
         >>>    )
-        >>> solar_spectrum = absorp.sl_read(r"path/to/allsmrtetr.txt")
+        >>> solar_spectrum = absorp.sl_read(r"C:\NMarom\PAH101\struct_absorption_compare\HBZCOR\allsmrtetr.txt")
 
         >>> t1 = absorp.absorbance('a', normalize = True)
         >>> t2 = absorp.absorbance('b', normalize = True)

@@ -25,6 +25,7 @@ if __name__ == "__main__":
     # for id in ('AHEYUI', 'BESSOJ', 'CIMNUH', 'CUYJOV', 'DEPDIL', 'DOLJET', 'DUYZAZ', 'EXISAG', 'GAMNOY', 'GERKET', 'HOVKOS', 'IBOSIC', 'KOWXAW01', 'LUTLIV', 'MAMQEY', 'MAVQOQ', 'NTSALA', 'REHMIA', 'REHYOT', 'RUSFUH', 'VIDYOW'): # Yiqun
     # for id in ("SAKXIN",): # Xuyan
     # for id in ("ZUPCIW",): # Yiqun
+    # for id in ("BIDRAH10",): # Yiqun
 
     # folder = "125-150ev"
     # for id in ('HIFSUL', 'HIFSIZ', 'ZAQTIU', 'TAMBOY', 'EMUVIR', 'MABZOF', 'FOHQID', 'MOPQUD', 'KASWUX', 'RULRIZ', 'BUWFUU', 'OFEXEC', 'MABZIZ', 'GADPOR', 'RUHLAH01', 'FUXWEB', 'IBUKAT', 'GOYFOP', 'FUXVOK', 'MEPMPZ10', 'TOMVOH', 'OFEXOM', 'FUQLAE', 'TPDTPY01', 'NAVKEC', 'MOVBAA', 'ZUDTAT', 'NEVPEJ', 'SAMKAU', 'SAMJUN', 'BERKEO', 'CROCAL', 'KIQVEL', 'WUGGIO', 'CACRED01', 'SEBJUF', 'JUMXAQ01', 'YAJXOX', 'QOCFEU', 'ILISEB', 'MUJSIU', 'VOBRUZ', 'EJIGOU', 'SUKVUQ', 'ADIQEK', 'DAMQOX', 'OTIHOP', 'UHIYOZ', 'RUYKEB', 'XAYVOI', 'UCONEG', 'BOGMAM', 'INDIGO04', 'XEQSAO', 'YIHHOO', 'FAWKIX01', 'PERFUP', 'DAPTOE', 'TAYHEG', 'FOXTOC', 'RERMUY', 'BIGXEU', 'NAPZAH', 'BOPSEF01', 'WISDUX', 'MUDXEO', 'LETVEM', 'YAMXER', 'FUFDUF', 'POLZEV', 'RUYKOL', 'JOXYEA', 'SUHYIE', 'LODCUD', 'OPIFEZ', 'ZEFJID10', 'PAQVUA', 'VIVWOM', 'VOQHOZ', 'PIHVIL', 'ROGFUP', 'WUTKAX', 'ODIDOU', 'DOTRAG', 'UGIRIM', 'NAVWAI', 'MUMZUQ', 'COQDIV', 'BUCTOJ', 'GIPMAT', 'BDNDSN01', 'INOPOR01', 'UMUMUL', 'CUYXAV', 'PAZMBU', 'UJIXIV', 'KAPNEV', 'PEXGII', 'SISZAV', 'DIFQEP', 'XOQBEK', 'LAQPUQ', 'MUMFAC', 'NAHXAW', 'UMOJEL', 'JOZKIS', 'BERZON', 'GANYAV', 'MOTJEL', 'REGDAI', 'RAZKUA', 'JAGJAC', 'GUDKAS', 'NAHPIW', 'BAKPAE', 'VAHKOE', 'SEKLOJ', 'BEGQAG', 'CUYYOK', 'EANAPQ10', 'GILYIK', 'BASNOY', 'MELLUK', 'UCIRII', 'WAZYUR', 'FIJBUW01', 'DEZKEY', 'NPQUIM', 'TEBLAO', 'ILOCUH', 'FAVLAQ', 'KEPXAG', 'EHEVAO', 'SAVHEE', 'MOBWUW', 'VUGCOP', 'ASOBOA', 'DMANPQ10', 'ZILKAG', 'LEBMOU', 'GAWQEB', 'QAYLAE', 'CECPAD', 'AVUFON', 'LIGVUU', 'HEYCIX', 'JETGEV', 'UJESEH', 'REVPAJ'):
@@ -58,14 +59,15 @@ if __name__ == "__main__":
     # for id in ("ICILUB", "VUKQIC"): # Jiayi
     # for id in ("VAKJOG",): # Xuyan
     # for id in ("TUNSIE",): # Yiqun
+    # for id in ("DOBTET", "SIPDTZ"): # Yiqun
 
     # folder = "extension"
     # for id in os.listdir(os.path.join("..", "GW_BSE", folder)):
         json_file = os.path.join("..", "json", folder, f"{id}.json")
         cif_file = os.path.join("..", "RelaxedCrystals", folder, f"{id}.cif")
         gwbse_root_folder = os.path.join("..", "GW_BSE", folder, id)
-        # os.system(f"python writeJSON.py --json_file {json_file} --geometry_author Xuyan --relax_code FHI-aims --cif_file {cif_file} --gwbse_author Xuyan --gwbse_root_folder {gwbse_root_folder} --overwrite")
-        os.system(f"python writeJSON.py --json_file {json_file} --gwbse_author Yiqun --gwbse_root_folder {gwbse_root_folder} --overwrite")
+        os.system(f"python writeJSON.py --json_file {json_file} --geometry_author Yiqun --relax_code FHI-aims --cif_file {cif_file} --gwbse_author Xuyan --gwbse_root_folder {gwbse_root_folder} --overwrite")
+        # os.system(f"python writeJSON.py --json_file {json_file} --gwbse_author Yiqun --gwbse_root_folder {gwbse_root_folder} --overwrite")
         print()
     """
     """
@@ -75,6 +77,6 @@ if __name__ == "__main__":
             json_file = os.path.join("../json", folder, f"{id}.json")
             cif_file = os.path.join("../RelaxedCrystals", folder, cif)
             gwbse_root_folder = os.path.join("../GW_BSE", folder, id)
-            # os.system(f"python writeJSON.py --json_file {json_file} --relax_code FHI-aims --cif_file {cif_file}")
-            os.system(f"python writeJSON.py --json_file {json_file} --gwbse_root_folder {gwbse_root_folder}")
+            os.system(f"python writeJSON.py --json_file {json_file} --relax_code FHI-aims --cif_file {cif_file} --gwbse_root_folder {gwbse_root_folder} --overwrite")
+            # os.system(f"python writeJSON.py --json_file {json_file} --gwbse_root_folder {gwbse_root_folder}")
     """
